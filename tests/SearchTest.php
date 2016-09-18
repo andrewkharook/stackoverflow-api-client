@@ -1,17 +1,16 @@
 <?php
 
-namespace Stackoverflow\Tests;
+namespace Stackoverflow\Test;
 
 
 use \Stackoverflow\Search;
 
 class SearchTest extends \PHPUnit_Framework_TestCase
 {
-
     /**
      * @dataProvider providerTestSearchWithRequiredOptionsSucceeds
      */
-    public function testSearchWithRequiredOptionsSucceeds($opts)
+    public function testRequests($opts)
     {
         $search = new Search($opts);
         $search->run();
@@ -19,12 +18,20 @@ class SearchTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals(200, $search->getResponse()->getStatusCode());
     }
 
+    public function testBadRequest()
+    {
+        $search = new Search(array());
+        $search->run();
+
+        $this->assertEquals(400, $search->getResponse()->getStatusCode());
+    }
+
     /**
      * @expectedException \Stackoverflow\Exception\StackoverflowException
      */
-    public function testSearchThrowsExceptionMissingRequiredOptions()
+    public function testSearchThrowsException()
     {
-        $search = new Search(array());
+        $search = new Search(array('invalid'=>'option'));
         $search->run();
     }
 
@@ -54,4 +61,5 @@ class SearchTest extends \PHPUnit_Framework_TestCase
             ),
         );
     }
+
 }

@@ -3,8 +3,9 @@
 namespace Stackoverflow;
 
 
-use GuzzleHttp\Client;
-use GuzzleHttp\ClientInterface;
+use Http\Client\HttpClient;
+use Http\Discovery\HttpClientDiscovery;
+use Http\Discovery\MessageFactoryDiscovery;
 use Symfony\Component\OptionsResolver\Exception\UndefinedOptionsException;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\OptionsResolver\Options;
@@ -24,9 +25,14 @@ class Search
     const API_URL = 'https://api.stackexchange.com/2.2/search';
 
     /**
-     * @var \GuzzleHttp\ClientInterface
+     * @var \Http\Client\HttpClient
      */
     protected $http;
+
+    /**
+     * @var \Psr\Http\Message\RequestInterface
+     */
+    protected $request;
 
     /**
      * @var \Psr\Http\Message\ResponseInterface
@@ -65,7 +71,7 @@ class Search
     public function run()
     {
         try {
-            $this->response = $this->getHttpClient()->request('get', static::API_URL, array('query'=>$this->options));
+            $this->response = $this->getHttpClient()->sendRequest($this->getRequest());
         } catch (\Exception $e) {
             throw new Exception\StackoverflowException($e->getMessage());
         }
@@ -81,9 +87,9 @@ class Search
     public function configureOptions(OptionsResolver $resolver)
     {
         $resolver->setDefaults(array(
-            'site' => 'stackoverflow',
+            'site'  => 'stackoverflow',
             'order' => 'desc',
-            'sort' => 'activity',
+            'sort'  => 'activity',
         ));
         $resolver->setDefined(array(
             'tagged',
@@ -144,22 +150,26 @@ class Search
     /**
      * Set the Http Client attribute
      *
-     * @param \GuzzleHttp\ClientInterface $http
+     * @param \Http\Client\HttpClient $http
      */
-    public function setHttpClient(ClientInterface $http)
+    public function setHttpClient(HttpClient $http = null)
     {
+        if (is_null($http)) {
+            $http = $this->createDefaultHttpClient();
+        }
+
         $this->http = $http;
     }
 
     /**
      * Get the Http Client object
      *
-     * @return \GuzzleHttp\ClientInterface implementation
+     * @return \Http\Client\HttpClient implementation
      */
     public function getHttpClient()
     {
         if (is_null($this->http)) {
-            $this->http = $this->createDefaultHttpClient();
+            $this->setHttpClient();
         }
 
         return $this->http;
@@ -168,13 +178,11 @@ class Search
     /**
      * Initialize and return default Http Client
      *
-     * @return \GuzzleHttp\Client
+     * @return \Http\Client\HttpClient
      */
     protected function createDefaultHttpClient()
     {
-        $options = array();
-
-        return new Client($options);
+        return HttpClientDiscovery::find();
     }
 
     /**
@@ -183,5 +191,32 @@ class Search
     public function getResponse()
     {
         return $this->response;
+    }
+
+    /**
+     * @return \Psr\Http\Message\RequestInterface
+     */
+    public function getRequest()
+    {
+        if (is_null($this->request)) {
+            $this->request = $this->createRequest('GET', static::API_URL, $this->options);
+        }
+
+        return $this->request;
+    }
+
+    /**
+     * @param string $method
+     * @param string $baseUrl
+     * @param array  $opts
+     * @return \Psr\Http\Message\RequestInterface
+     */
+    protected function createRequest($method, $baseUrl, array $opts)
+    {
+        $requestFactory = MessageFactoryDiscovery::find();
+
+        $req = $requestFactory->createRequest($method, $baseUrl);
+
+        return $req->withUri($req->getUri()->withQuery(http_build_query($opts)));
     }
 }

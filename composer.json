@@ -1,25 +1,35 @@
 {
-    "name": "andrewkharook/stackoverflow-api-client",
-    "description": "PHP library to interact with stackoverflow.com API",
-    "type": "Library",
-    "license": "MIT",
-    "authors": [
-        {
-            "name": "Andrew Kharook",
-            "email": "andriy.kharuk@gmail.com"
-        }
-    ],
-    "minimum-stability": "stable",
-    "require": {
-        "guzzlehttp/guzzle": "~6.0",
-        "symfony/options-resolver": "2.8.9"
-    },
-    "require-dev": {
-        "phpunit/phpunit": "4.8.27"
-    },
-    "autoload": {
-        "psr-4": {
-            "Stackoverflow\\": "src/"
-        }
+  "name": "andrewkharook/stackoverflow-api-client",
+  "description": "PHP library to interact with stackoverflow.com API",
+  "type": "Library",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Andrew Kharook",
+      "email": "andriy.kharuk@gmail.com"
     }
+  ],
+  "minimum-stability": "stable",
+  "require": {
+    "php-http/client-implementation": "^1.0",
+    "symfony/options-resolver": "2.8.9",
+
+    "php-http/discovery": "^1.0"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "4.8.27",
+
+    "php-http/guzzle6-adapter": "^1.1",
+    "php-http/message": "^1.0"
+  },
+  "autoload": {
+    "psr-4": {
+      "Stackoverflow\\": "src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Stackoverflow\\Test\\": "tests/"
+    }
+  }
 }
